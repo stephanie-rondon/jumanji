@@ -1,13 +1,11 @@
 <?php
-include "conexao.php";
+include "conexao.php"; // conexão com MySQL + variáveis do Cloudinary
 
 // Função para deletar imagem do Cloudinary
 function deletarImagemCloudinary($public_id, $cloud_name, $api_key, $api_secret) {
-    date_default_timezone_set('America/Sao_Paulo');
     $timestamp = time();
-    $string_to_sign = "public_id=$public_id&timestamp=$timestamp";
-    $signature = hash_hmac('sha1', $string_to_sign, $api_secret);
-
+    $string_to_sign = "public_id=$public_id&timestamp=$timestamp$api_secret";
+    $signature = sha1($string_to_sign);
 
     $data = [
         'public_id' => $public_id,
@@ -26,6 +24,13 @@ function deletarImagemCloudinary($public_id, $cloud_name, $api_key, $api_secret)
 
     return json_decode($response, true);
 }
+
+/*
+COMPARAÇÃO: No código de recados/pedidos
+- Não há função de deletar arquivos
+- Não existe upload de imagem
+- Apenas se deleta o registro do banco
+*/
 
 // Excluir produto
 if(isset($_GET['excluir'])) {
@@ -46,6 +51,12 @@ if(isset($_GET['excluir'])) {
     exit;
 }
 
+/*
+COMPARAÇÃO:
+- Código de recados/pedidos: deletar não manipula imagens, só remove o registro
+- Aqui é necessário deletar a imagem no Cloudinary antes de excluir do banco
+*/
+
 // Editar produto
 if(isset($_POST['editar'])) {
     $id = intval($_POST['id']);
@@ -59,10 +70,22 @@ if(isset($_POST['editar'])) {
     exit;
 }
 
+/*
+COMPARAÇÃO:
+- Código de recados/pedidos: não há edição inline
+- Aqui o sistema permite editar nome, descrição e preço, mas não imagem
+*/
+
+
 // Selecionar produtos para exibição
 $editar_id = isset($_GET['editar']) ? intval($_GET['editar']) : 0;
 $produtos = mysqli_query($conexao, "SELECT * FROM produtos ORDER BY id DESC");
 
+/*
+COMPARAÇÃO:
+- Código de recados/pedidos: SELECT * FROM recados ORDER BY id DESC
+- Aqui seleciona produtos com imagens e preço
+*/
 ?>
 
 <!DOCTYPE html>

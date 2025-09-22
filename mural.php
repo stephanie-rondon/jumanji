@@ -1,24 +1,24 @@
 <?php
-include "conexao.php";
-
+include "conexao.php"; // Aqui já tem conexão MySQL + variáveis do Cloudinary ($cloud_name, $api_key, $api_secret)
+// ==========================
 // Inserir novo produto
+// ==========================
 if(isset($_POST['cadastra'])){
     // Pegando os dados do formulário (tratamento contra SQL Injection)
     $nome = mysqli_real_escape_string($conexao, $_POST['nome']);
     $descricao = mysqli_real_escape_string($conexao, $_POST['descricao']);
     $preco = floatval($_POST['preco']);
     $imagem_url = ""; // Inicializa a variável que vai guardar a URL da imagem
-
+    // --------------------------
     // Upload da imagem para Cloudinary
+    // --------------------------
     if(isset($_FILES['imagem']) && $_FILES['imagem']['error'] == 0){
         $cfile = new CURLFile($_FILES['imagem']['tmp_name'], $_FILES['imagem']['type'], $_FILES['imagem']['name']);
 
-
         $timestamp = time();
-        $string_to_sign = "timestamp=$timestamp"; // apenas os parâmetros, sem api_secret
-        $signature = hash_hmac('sha1', $string_to_sign, $api_secret);
+        $string_to_sign = "timestamp=$timestamp$api_secret";
+        $signature = sha1($string_to_sign);
 
-        date_default_timezone_set('America/Sao_Paulo');
         $data = [
             'file' => $cfile,
             'timestamp' => $timestamp,
@@ -43,17 +43,36 @@ if(isset($_POST['cadastra'])){
         }
     }
 
+    // ==========================
     // Inserindo no banco de dados
+    // ==========================
     if($imagem_url != ""){
         $sql = "INSERT INTO produtos (nome, descricao, preco, imagem_url) VALUES ('$nome', '$descricao', $preco, '$imagem_url')";
         mysqli_query($conexao, $sql) or die("Erro ao inserir: " . mysqli_error($conexao));
     }
 
+    // ==========================
+    // REDIRECIONAMENTO
+    // ==========================
     header("Location: mural.php");
     exit;
 }
 
+/* 
+==================================================
+COMPARAÇÃO COM O CÓDIGO DE "ANTIGOxCLOUDINARY"
+==================================================
+- Tabela usada: recados (nome, email, mensagem)
+- Campos do formulário: nome, email, msg
+- Não tem upload de imagem, nem Cloudinary
+- Inserção SQL: INSERT INTO recados (nome, email, mensagem)
+- Validação adicional no front-end usando jQuery Validate
+- Exibição: <ul> ao invés de <div>, apenas texto, sem preço ou imagem
+- Código mais simples e voltado a mensagens
+==================================================
+*/
 ?>
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -61,6 +80,27 @@ if(isset($_POST['cadastra'])){
 <title>Mural de Produtos</title>
 <link rel="stylesheet" href="style.css"/>
 
+<!--
+COMPARAÇÃO: No código ANTIGO/pedidos havia jQuery + jQuery Validate
+<script src="scripts/jquery.js"></script>
+<script src="scripts/jquery.validate.js"></script>
+<script>
+$(document).ready(function() {
+    $("#mural").validate({
+        rules: {
+            nome: { required: true, minlength: 4 },
+            email: { required: true, email: true },
+            msg: { required: true, minlength: 10 }
+        },
+        messages: {
+            nome: { required: "Digite o seu nome", minlength: "O nome deve ter no mínimo 4 caracteres" },
+            email: { required: "Digite o seu e-mail", email: "Digite um e-mail válido" },
+            msg: { required: "Digite sua mensagem", minlength: "A mensagem deve ter no mínimo 10 caracteres" }
+        }
+    });
+});
+</script>
+-->
 </head>
 <body>
 <div id="main">
@@ -69,6 +109,9 @@ if(isset($_POST['cadastra'])){
             <h1>Mural de Produtos</h1>
         </div>
 
+        <!-- ==========================
+        FORMULÁRIO
+        ========================== -->
         <div id="formulario_mural">
             <form id="mural" method="post" enctype="multipart/form-data">
                 <label>Nome do produto:</label>
@@ -87,6 +130,9 @@ if(isset($_POST['cadastra'])){
             </form>
         </div>
 
+        <!-- ==========================
+        LISTA DE PRODUTOS
+        ========================== -->
         <div class="produtos-container">
         <?php
         $seleciona = mysqli_query($conexao, "SELECT * FROM produtos ORDER BY id DESC");
@@ -100,11 +146,19 @@ if(isset($_POST['cadastra'])){
             echo '</div>';
         }
 
+        /*
+        COMPARAÇÃO: Código antigo x cloudinary
+        - Exibe em <ul class="recados"> cada recado
+        - Mostra nome, email e mensagem
+        - Não há imagem, preço ou descrição longa
+        */
+
         ?>
         </div>
 
         <div id="footer">
             <p>Mural - Cloudinary & PHP</p>
+            <!-- No código anterior, o footer estava vazio -->
         </div>
     </div>
 </div>
