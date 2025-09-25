@@ -43,17 +43,12 @@ if(isset($_POST['cadastra'])){
         }
     }
 
-    // ==========================
     // Inserindo no banco de dados
-    // ==========================
     if($imagem_url != ""){
         $sql = "INSERT INTO produtos (nome, descricao, preco, imagem_url) VALUES ('$nome', '$descricao', $preco, '$imagem_url')";
         mysqli_query($conexao, $sql) or die("Erro ao inserir: " . mysqli_error($conexao));
     }
 
-    // ==========================
-    // REDIRECIONAMENTO
-    // ==========================
     header("Location: mural.php");
     exit;
 }
@@ -109,30 +104,36 @@ $(document).ready(function() {
             <h1>Mural de Produtos</h1>
         </div>
 
-        <!-- ==========================
-        FORMULÁRIO
-        ========================== -->
         <div id="formulario_mural">
             <form id="mural" method="post" enctype="multipart/form-data">
-                <label>Nome do produto:</label>
-                <input type="text" name="nome" required/>
+                <div class="items">
+                    <div class="campo-input">
+                    <label>Nome do produto:</label>
+                    <input type="text" name="nome" required/>
+                </div>
 
-                <label>Descrição:</label>
-                <textarea name="descricao" required></textarea>
+                <div class="campo-input">
+                    <label>Descrição:</label>
+                    <textarea name="descricao" required></textarea>
+                </div>
 
-                <label>Preço:</label>
-                <input type="number" step="0.01" name="preco" required/>
+               <div class="campo-input">
+                    <label>Preço:</label>
+                    <input type="number" step="0.01" name="preco" required/>
+               </div>
 
-                <label>Imagem:</label>
-                <input type="file" name="imagem" accept="image/*" required/>
+                <div class="campo-input">
+                    <label>Imagem:</label>
+                <input type="file" name="imagem" id="img" accept="image/*" required/>
+                </div>
+                </div>
 
-                <input type="submit" value="Cadastrar Produto" name="cadastra" class="btn"/>
+                <div class="btn-mural">
+                    <input type="submit" value="Cadastrar Produto" name="cadastra" class="btn"/>
+                </div>
             </form>
         </div>
 
-        <!-- ==========================
-        LISTA DE PRODUTOS
-        ========================== -->
         <div class="produtos-container">
         <?php
         $seleciona = mysqli_query($conexao, "SELECT * FROM produtos ORDER BY id DESC");
